@@ -2,16 +2,37 @@ const express = require('express')
 const responseTime = require('response-time')
 const redis = require('redis')
 const axios = require('axios')
-
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+async function startredis() {
+  try {
+      await exec('redis-server /etc/redis/redis.conf');
+  }catch (err) {
+     console.error(err);
+  };
+};
+async function clearredis() {
+  try {
+    const { stdout } = await exec('redis-cli DBSIZE');
+    const size = parseInt(stdout);
+    if (size > 0) {
+        await exec('redis-cli FLUSHDB');
+        console.log('Redis cache flushed!');
+    } else {
+        console.log('Redis cache is empty, nothing to flush');
+    }
+} catch (err) {
+    console.log(err);
+}
+}
 const runApp = async () => {
-
+  await startredis();
   // connect to redis
   const client = redis.createClient()
   client.on('error', (err) => console.log('Redis Client Error', err));
   await client.connect();
   console.log('Redis connected!')
-
-  
+  setInterval(clearredis, 600000);
   const app = express()
   // add response-time to requests
   app.use(responseTime())
