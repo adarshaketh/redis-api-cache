@@ -32,7 +32,7 @@ const runApp = async () => {
   client.on('error', (err) => console.log('Redis Client Error', err));
   await client.connect();
   console.log('Redis connected!')
-  setInterval(clearredis, 600000);
+  setInterval(clearredis, 60000);
   const app = express()
   // add response-time to requests
   app.use(responseTime())
